@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>สถานีสุขภาพชุมชนตำบลคำใหญ่</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-hero">
+        <img src="assets/community-health-station.png" alt="" />
+        <p class="eyebrow">Khamyai Community Health Station</p>
+        <h1>สถานีสุขภาพชุมชนตำบลคำใหญ่</h1>
+        <p>ระบบคัดกรอง NCDs สำหรับประชาชน อสม. และเจ้าหน้าที่ พร้อมอนุมัติบัญชีผู้ใช้งาน</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth-tab="login" type="button">เข้าสู่ระบบ</button>
+          <button class="auth-tab" data-auth-tab="register" type="button">สมัครใช้งาน</button>
+        </div>
+
+        <form id="loginForm" class="auth-form active">
+          <h2>เข้าสู่ระบบ</h2>
+          <label>Username<input name="username" autocomplete="username" required /></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
+          <button class="primary-button" type="submit">เข้าสู่ระบบ</button>
+          <p class="hint">ผู้ดูแลเริ่มต้น: username <code>admin</code> password <code>123456</code> ควรเปลี่ยนรหัสผ่านทันทีหลังเข้าใช้ครั้งแรก</p>
+        </form>
+
+        <form id="registerForm" class="auth-form">
+          <h2>สมัครใช้งาน</h2>
+          <div class="form-grid compact">
+            <label>ชื่อ-สกุล<input name="fullName" required /></label>
+            <label>บทบาท
+              <select name="role">
+                <option value="volunteer">อสม.</option>
+                <option value="public">ประชาชน</option>
+              </select>
+            </label>
+          </div>
+          <label>Username<input name="username" autocomplete="username" required /></label>
+          <label>Password<input name="password" type="password" autocomplete="new-password" minlength="6" required /></label>
+          <label>ยืนยัน Password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="6" required /></label>
+          <button class="primary-button" type="submit">ส่งคำขออนุมัติ</button>
+          <p class="hint">บัญชีใหม่จะอยู่สถานะรออนุมัติ ผู้ดูแลระบบต้องอนุมัติก่อนจึงเข้าใช้งานได้</p>
+        </form>
+      </div>
+    </section>
+
+    <div class="app-shell hidden" id="appShell">
+      <header class="app-header">
+        <div class="brand">
+          <img src="assets/community-health-station.png" alt="" />
+          <div>
+            <p class="eyebrow">NCDs Self Screening</p>
+            <h1>สถานีสุขภาพชุมชนตำบลคำใหญ่</h1>
+            <p>คัดกรองสุขภาพเบื้องต้น วิเคราะห์ความเสี่ยง และติดตามผลในชุมชน</p>
+          </div>
+        </div>
+        <div class="user-actions">
+          <span class="user-chip" id="currentUserChip"></span>
+          <button class="ghost-button" id="changePasswordBtn" type="button">เปลี่ยนรหัสผ่าน</button>
+          <button class="ghost-button admin-only" id="syncSettingsBtn" type="button">ตั้งค่า Sheet</button>
+          <button class="danger-button" id="logoutBtn" type="button">ออกจากระบบ</button>
+        </div>
+      </header>
+
+      <nav class="tabbar" aria-label="เมนูหลัก">
+        <button class="tab active" data-view="screening" type="button">คัดกรอง</button>
+        <button class="tab" data-view="population" type="button">ประชากร</button>
+        <button class="tab" data-view="dashboard" type="button">สรุปผล</button>
+        <button class="tab admin-only" data-view="accounts" type="button">ผู้ใช้งาน</button>
+        <button class="tab" data-view="flow" type="button">Flow</button>
+      </nav>
+
+      <main>
+        <section class="view active" id="screening">
+          <div class="screening-layout">
+            <aside class="panel person-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">ทะเบียน 35 ปีขึ้นไป</p>
+                  <h2>เลือกผู้รับบริการ</h2>
+                </div>
+                <span class="count-pill" id="populationCount">0 คน</span>
+              </div>
+              <label class="search-box">
+                <span>ค้นหา</span>
+                <input id="personSearch" type="search" placeholder="ชื่อ เลขบัตร บ้านเลขที่ หมู่บ้าน หรือ อสม." />
+              </label>
+              <div class="person-list" id="personList"></div>
+            </aside>
+
+            <form class="panel form-panel" id="screeningForm">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">ประเมินตามแนวทาง 8 ขั้นตอน</p>
+                  <h2>แบบคัดกรอง NCDs</h2>
+                </div>
+                <button class="primary-button" type="submit">วิเคราะห์และบันทึก</button>
+              </div>
+
+              <div class="selected-person" id="selectedPerson">
+                <strong>ยังไม่ได้เลือกประชาชน</strong>
+                <span>เลือกจากทะเบียน หรือนำเข้ารายชื่อในเมนูประชากร</span>
+              </div>
+
+              <div class="form-grid">
+                <label>วันที่คัดกรอง<input name="screeningDate" type="date" required /></label>
+                <label>ผู้คัดกรอง<input name="screener" id="screenerInput" placeholder="ชื่อประชาชน / อสม." /></label>
+                <label>ช่องทาง
+                  <select name="mode">
+                    <option>ประชาชนคัดกรองตนเอง</option>
+                    <option>อสม.คัดกรองให้ประชาชน</option>
+                    <option>รพ.สต./หน่วยบริการ</option>
+                  </select>
+                </label>
+                <label>สิทธิ์/ข้อมูลพื้นฐาน
+                  <select name="eligibility">
+                    <option>ตรวจสอบแล้ว</option>
+                    <option>รอตรวจสอบ</option>
+                    <option>ข้อมูลไม่ครบ</option>
+                  </select>
+                </label>
+              </div>
+
+              <h3>ค่าร่างกายและความดัน</h3>
+              <div class="form-grid">
+                <label>น้ำหนัก (กก.)<input name="weight" type="number" min="20" max="250" step="0.1" required /></label>
+                <label>ส่วนสูง (ซม.)<input name="height" type="number" min="100" max="230" step="0.1" required /></label>
+                <label>รอบเอว (ซม.)<input name="waist" type="number" min="30" max="200" step="0.1" /></label>
+                <label>ความดันตัวบน<input name="sbp" type="number" min="60" max="260" required /></label>
+                <label>ความดันตัวล่าง<input name="dbp" type="number" min="30" max="160" required /></label>
+                <label>ชีพจร<input name="pulse" type="number" min="30" max="220" /></label>
+              </div>
+
+              <h3>คัดกรองเพิ่มเติม</h3>
+              <div class="form-grid">
+                <label>สูบบุหรี่
+                  <select name="smoking">
+                    <option>ไม่สูบ</option>
+                    <option>เคยสูบ</option>
+                    <option>สูบปัจจุบัน</option>
+                  </select>
+                </label>
+                <label>แอลกอฮอล์
+                  <select name="alcohol">
+                    <option>ไม่ดื่ม</option>
+                    <option>ดื่มนาน ๆ ครั้ง</option>
+                    <option>ดื่มประจำ</option>
+                  </select>
+                </label>
+                <label>น้ำตาลปลายนิ้ว/ FBS (mg/dL)<input name="glucose" type="number" min="40" max="600" /></label>
+                <label>ไขมันรวม (mg/dL)<input name="cholesterol" type="number" min="80" max="500" /></label>
+                <label>PHQ-2 ซึมเศร้า (0-6)<input name="phq2" type="number" min="0" max="6" /></label>
+                <label>ความเค็มในอาหาร
+                  <select name="salt">
+                    <option>ต่ำ/พอดี</option>
+                    <option>ปานกลาง</option>
+                    <option>สูง</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="wide-label">ประวัติ/อาการสำคัญ
+                <textarea name="history" rows="3" placeholder="โรคประจำตัว ยาที่ใช้ อาการผิดปกติ หรือข้อมูลที่ควรติดตาม"></textarea>
+              </label>
+
+              <section class="result-box" id="resultBox" aria-live="polite">
+                <div>
+                  <p class="eyebrow">AI Health Brief</p>
+                  <h2>รอการวิเคราะห์</h2>
+                  <p>กรอกข้อมูลแล้วกดวิเคราะห์ ระบบจะแปลผลเป็นปกติ เสี่ยง หรือเสี่ยงสูง พร้อมคำแนะนำรายบุคคล</p>
+                </div>
+              </section>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" id="population">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">นำเข้าและจัดการกลุ่มเป้าหมาย</p>
+                <h2>ประชากรอายุ 35 ปีขึ้นไป</h2>
+              </div>
+              <button class="primary-button admin-only" id="loadBundledCsv" type="button">โหลดไฟล์ที่แนบมา</button>
+            </div>
+            <div class="import-grid admin-only">
+              <label class="file-drop">
+                <input id="csvFile" type="file" accept=".csv,text/csv" />
+                <strong>นำเข้า CSV ใหม่</strong>
+                <span>รองรับคอลัมน์: เลขบัตรประชาชน ชื่อ นามสกุล เพศ อายุ หมู่บ้าน บ้านเลขที่ อสม.ที่รับผิดชอบ</span>
+              </label>
+              <div class="mini-stats">
+                <span id="villageStat">0 หมู่บ้าน</span>
+                <span id="volunteerStat">0 อสม.</span>
+                <span id="screenedStat">0 คัดกรองแล้ว</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ชื่อ-สกุล</th>
+                    <th>อายุ</th>
+                    <th>หมู่บ้าน</th>
+                    <th>บ้านเลขที่</th>
+                    <th>อสม.</th>
+                    <th>สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody id="populationTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="dashboard">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">รายเดือนสำหรับคณะทำงาน</p>
+                <h2>สรุปข้อมูลคัดกรอง</h2>
+              </div>
+              <button class="ghost-button" id="exportCsv" type="button">ส่งออก CSV</button>
+            </div>
+            <div class="dashboard-grid">
+              <div class="stat-card"><span>ทั้งหมด</span><strong id="totalRecords">0</strong></div>
+              <div class="stat-card normal"><span>ปกติ</span><strong id="normalRecords">0</strong></div>
+              <div class="stat-card risk"><span>เสี่ยง</span><strong id="riskRecords">0</strong></div>
+              <div class="stat-card high"><span>เสี่ยงสูง/ส่งต่อ</span><strong id="highRecords">0</strong></div>
+            </div>
+            <div class="report-list" id="reportList"></div>
+          </div>
+        </section>
+
+        <section class="view" id="accounts">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">อนุมัติและจัดการบัญชี</p>
+                <h2>ผู้ใช้งานระบบ</h2>
+              </div>
+              <button class="ghost-button" id="seedVolunteerUsers" type="button">สร้างบัญชี อสม. จากทะเบียน</button>
+            </div>
+            <p class="hint">บัญชี อสม. ที่สร้างจากทะเบียนจะใช้ username แบบ <code>v001</code>, <code>v002</code> และรหัสผ่านเริ่มต้น <code>123456</code> พร้อมบังคับเปลี่ยนรหัสผ่านเมื่อเข้าสู่ระบบครั้งแรก หากมีไฟล์ผู้ใช้จากระบบข้อมูลสุขภาพชุมชน สามารถนำเข้าได้ด้านล่าง</p>
+            <div class="import-grid">
+              <label class="file-drop">
+                <input id="usersCsvFile" type="file" accept=".csv,text/csv" />
+                <strong>นำเข้า username/password จากระบบข้อมูลสุขภาพชุมชน</strong>
+                <span>รองรับคอลัมน์: username,password,fullName,role,status,volunteerName</span>
+              </label>
+              <div class="mini-stats">
+                <span id="pendingUserStat">0 รออนุมัติ</span>
+                <span id="activeUserStat">0 ใช้งานได้</span>
+                <span id="volunteerUserStat">0 อสม.</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ผู้ใช้งาน</th>
+                    <th>Username</th>
+                    <th>บทบาท</th>
+                    <th>สถานะ</th>
+                    <th>ผูกกับ อสม.</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="flow">
+          <div class="panel">
+            <p class="eyebrow">แนวทางปฏิบัติ</p>
+            <h2>Flow chart การประเมินค่าสุขภาพเบื้องต้น</h2>
+            <ol class="flow-list">
+              <li><strong>ประชาสัมพันธ์และนัดหมาย</strong><span>แจ้งวัน เวลา สถานที่ และช่องทางคัดกรองตนเอง</span></li>
+              <li><strong>ลงทะเบียนและซักประวัติ</strong><span>ตรวจสอบสิทธิ์ ข้อมูลพื้นฐาน โรคประจำตัว และยาที่ใช้</span></li>
+              <li><strong>วัดค่าหลัก</strong><span>น้ำหนัก ส่วนสูง BMI รอบเอว และความดันโลหิต</span></li>
+              <li><strong>คัดกรองเพิ่มเติม</strong><span>บุหรี่ แอลกอฮอล์ ซึมเศร้า น้ำตาล ไขมัน และความเค็ม</span></li>
+              <li><strong>แปลผล</strong><span>จัดกลุ่มปกติ เสี่ยง และเสี่ยงสูง</span></li>
+              <li><strong>ให้คำแนะนำและนัดติดตาม</strong><span>บันทึกในระบบดิจิทัลและกำหนดวันติดตาม</span></li>
+              <li><strong>ส่งต่อ</strong><span>กรณีค่าผิดปกติหรือเสี่ยงสูง ส่งต่อ รพ.สต./หน่วยบริการ</span></li>
+              <li><strong>สรุปรายเดือน</strong><span>นำเสนอคณะทำงาน/ชุมชนเพื่อวางแผนป้องกัน NCDs</span></li>
+            </ol>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="settingsDialog">
+      <form method="dialog" class="settings-card">
+        <h2>ตั้งค่าการบันทึก Google Sheet</h2>
+        <p>Sheet ID ถูกใส่ไว้แล้ว ต้อง deploy ไฟล์ <code>google-apps-script/Code.gs</code> เป็น Web App แล้วนำ URL มาวางที่นี่</p>
+        <label>Google Sheet ID<input id="sheetId" value="1yydaayto6uVSTJ8Qav84kBcZ_HDQiBGKBIkBOGjlBvU" /></label>
+        <label>Apps Script Web App URL<input id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label>
+        <menu>
+          <button class="ghost-button" value="cancel">ยกเลิก</button>
+          <button class="primary-button" id="saveSettings" value="default">บันทึก</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="passwordDialog">
+      <form method="dialog" class="settings-card" id="passwordForm">
+        <h2>เปลี่ยนรหัสผ่าน</h2>
+        <label>รหัสผ่านเดิม<input name="oldPassword" type="password" autocomplete="current-password" required /></label>
+        <label>รหัสผ่านใหม่<input name="newPassword" type="password" autocomplete="new-password" minlength="6" required /></label>
+        <label>ยืนยันรหัสผ่านใหม่<input name="confirmPassword" type="password" autocomplete="new-password" minlength="6" required /></label>
+        <menu>
+          <button class="ghost-button" value="cancel">ยกเลิก</button>
+          <button class="primary-button" value="default">บันทึก</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
