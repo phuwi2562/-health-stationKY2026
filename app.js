@@ -18,6 +18,7 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 document.addEventListener("DOMContentLoaded", async () => {
   await bootstrapUsers();
+  setupLogoFallbacks();
   bindEvents();
   $("#sheetId").value = settings.sheetId || DEFAULT_SHEET_ID;
   $("#webAppUrl").value = settings.webAppUrl || "";
@@ -50,6 +51,17 @@ function bindEvents() {
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     showToast("บันทึกการตั้งค่าแล้ว", "success");
+  });
+}
+
+function setupLogoFallbacks() {
+  document.querySelectorAll(".logo-frame img").forEach((image) => {
+    image.addEventListener("error", () => {
+      image.closest(".logo-frame")?.classList.add("image-error");
+    }, { once: true });
+    image.addEventListener("load", () => {
+      image.closest(".logo-frame")?.classList.remove("image-error");
+    });
   });
 }
 
